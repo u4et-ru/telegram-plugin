@@ -17,7 +17,7 @@ class FormToTelegramPlugin extends AbstractPlugin
     const DESCRIPTION = 'Plugin duplicates form messages as text in telegram bot';
     const AUTHOR = 'Aleksey Ilyin';
     const AUTHOR_SITE = 'https://getwebspace.org';
-    const VERSION = '1.0';
+    const VERSION = '1.0.0';
 
     public function __construct(ContainerInterface $container)
     {

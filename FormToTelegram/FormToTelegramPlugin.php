@@ -17,7 +17,7 @@ class FormToTelegramPlugin extends AbstractPlugin
     const DESCRIPTION = 'Plugin duplicates form messages as text in telegram bot';
     const AUTHOR = 'Aleksey Ilyin';
     const AUTHOR_SITE = 'https://getwebspace.org';
-    const VERSION = '1.0.0';
+    const VERSION = '2.0.0';
 
     public function __construct(ContainerInterface $container)
     {
@@ -61,17 +61,21 @@ class FormToTelegramPlugin extends AbstractPlugin
 
         if ($order) {
             $args = [
-                'name' => $order->user ? $order->user->getName() : $order->delivery['client'],
-                'phone' => $order->user && $order->user->getPhone() ? $order->user->getPhone() : $order->phone,
-                'email' => $order->user && $order->user->email ? $order->user->getEmail() : $order->email,
+                'name' => $order->user ? $order->user->name() : $order->delivery['client'],
+                'phone' => $order->user && $order->user->phone ? $order->user->phone : $order->phone,
+                'email' => $order->user && $order->user->email ? $order->user->email : $order->email,
                 'address' => $order->delivery['address'],
                 'comment' => $order->comment,
-                'price' => $order->getTotalPrice(),
+                'price' => $order->totalSum(),
             ];
 
             $body = '';
             foreach ($args as $key => $value) {
                 if ($key === 'recaptcha') continue;
+                if ($key === 'payment') continue;
+
+                $value = str_replace('_', ' ', (string) $value);
+
                 $body .= "*{$key}*: {$value}\n";
             }
 
@@ -80,12 +84,12 @@ class FormToTelegramPlugin extends AbstractPlugin
                     $buf = explode(':', $str);
 
                     if (!empty($buf) && $buf[0] && $buf[1]) {
-                        $body = str_replace('*' . $buf[0] . '*', '*' . $buf[1] . '*', $body);
+                        $body = str_replace('*' . $buf[0] . '*', '*' . trim($buf[1]) . '*', $body);
                     }
                 }
             }
 
-            $body .= "\n[CUP]({$homepage}cup/catalog/order/{$order->getUuid()}/invoice)";
+            $body .= "\n[CUP]({$homepage}cup/catalog/order/{$order->uuid}/edit)";
 
             foreach ($this->getChatIds() as $chatId) {
                 $this->sendChatMessage($chatId, $body);
@@ -104,6 +108,9 @@ class FormToTelegramPlugin extends AbstractPlugin
             $body = '';
             foreach ($data as $key => $value) {
                 if ($key === 'recaptcha') continue;
+
+                $value = str_replace('_', ' ', (string) $value);
+
                 $body .= "*{$key}*: {$value}\n";
             }
 
@@ -112,12 +119,12 @@ class FormToTelegramPlugin extends AbstractPlugin
                     $buf = explode(':', $str);
 
                     if (!empty($buf) && $buf[0] && $buf[1]) {
-                        $body = str_replace('*' . $buf[0] . '*', '*' . $buf[1] . '*', $body);
+                        $body = str_replace('*' . $buf[0] . '*', '*' . trim($buf[1]) . '*', $body);
                     }
                 }
             }
 
-            //$body .= "\n[CUP]({$homepage}cup/form/{$form->getUuid()}/view/{$formData->getUuid()})";
+            //$body .= "\n[CUP]({$homepage}cup/form/{$form->uuid}/view/{$formData->uuid})";
 
             foreach ($this->getChatIds() as $chatId) {
                 $this->sendChatMessage($chatId, $body);
